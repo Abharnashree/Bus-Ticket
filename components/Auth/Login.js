@@ -7,16 +7,41 @@ const Login = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       setError('Please fill in both fields');
     } else {
-      setError('');
-      // Add your authentication logic here
-      console.log('Logged in with:', email);
-      navigation.navigate('Home'); // Change to the appropriate route after login
+      setError(''); // Clear any previous error
+      try {
+        const response = await fetch('http://192.168.1.3:8080/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+          }),
+        });
+  
+        const result = await response.json();
+  
+        if (response.ok) {
+          // Successfully logged in, navigate to the Home page
+          console.log(result.message); // For debugging
+          navigation.navigate('Home'); // Replace with the appropriate route after login
+        } else {
+          // Invalid email or password
+          setError(result.message || 'Invalid email or password');
+        }
+      } catch (error) {
+        // Handle network or server errors
+        console.error('Login error:', error);
+        setError('An error occurred. Please try again later.');
+      }
     }
   };
+  
 
   return (
     <View style={styles.container}>

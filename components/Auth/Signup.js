@@ -6,24 +6,53 @@ const Signup = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState('');
 
   const handleSignup = () => {
-    if (!email || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword || !name) {
       setError('Please fill in all fields');
     } else if (password !== confirmPassword) {
       setError('Passwords do not match');
     } else {
       setError('');
-      // Add your signup logic here
-      console.log('Signed up with:', email);
-      navigation.navigate('Login'); // Redirect to login page after successful signup
+      // Send request with name, email, and password
+      const payload = {
+        name,
+        email,
+        password,
+      };
+
+      fetch('http://192.168.1.3:8080/auth/signIn', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === 500) {
+            setError('Error signing up: ' + data.error);
+          } else {
+            navigation.navigate('Login'); // Redirect to login page after successful signup
+          }
+        })
+        .catch((error) => setError('Network Error: ' + error.message));
     }
   };
 
   return (
     <View style={styles.container}>
       <Title style={styles.title}>Sign Up</Title>
+
+      {/* Name Input */}
+      <TextInput
+        label="Name"
+        value={name}
+        onChangeText={(text) => setName(text)}
+        style={styles.input}
+      />
 
       {/* Email Input */}
       <TextInput
@@ -100,4 +129,3 @@ const styles = StyleSheet.create({
 });
 
 export default Signup;
-
