@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Card, Button, Title, IconButton } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AvailableBuses = ({ route, navigation }) => {
   const { buses } = route.params;
@@ -12,6 +13,21 @@ const AvailableBuses = ({ route, navigation }) => {
       return acc;
     }, {})
   );
+
+  const [userId, setUserId] = useState(null); // State for userId
+
+  useEffect(() => {
+    // Fetch the userId from AsyncStorage
+    const fetchUserId = async () => {
+      try {
+        const storedUserId = await AsyncStorage.getItem('userId');
+        setUserId(storedUserId);
+      } catch (error) {
+        console.error('Failed to fetch userId from AsyncStorage', error);
+      }
+    };
+    fetchUserId();
+  }, []);
 
   const handleIncrease = (busId) => {
     setTicketCounts((prev) => ({
@@ -28,9 +44,38 @@ const AvailableBuses = ({ route, navigation }) => {
   };
 
   const handleBookNow = (bus) => {
-    // Pass ticket count along with bus details
-    navigation.navigate('Confirmation', { bus, tickets: ticketCounts[bus.id] });
+    if (!userId) {
+      alert('User ID not found. Please log in again.');
+      return;
+    }
+  
+    const payload = {
+      busId: Number(bus.id), // Ensure it's a number
+      tickets: Number(ticketCounts[bus.id]), // Ensure it's a number
+      userId: Number(userId), // Ensure it's a number
+      date: new Date().toISOString().split('T')[0], // Current date
+    };
+  
+    fetch('http://192.168.235.158:8080/api/book', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === 'success') {
+          alert(data.message);
+          navigation.navigate('Confirmation', { bookingDetails: data.bookingDetails });
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch((error) => alert('Network Error: ' + error.message));
   };
+  
+  
 
   return (
     <View style={styles.container}>

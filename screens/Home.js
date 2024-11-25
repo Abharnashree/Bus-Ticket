@@ -1,23 +1,44 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import { Button, TextInput, Title } from 'react-native-paper';
 import Notification from '../components/Notifications/Notification.js'; // Import Notification component
 
-const Home = ({navigation}) => {
+const Home = ({ navigation }) => {
   const [startPoint, setStartPoint] = useState('');
   const [endPoint, setEndPoint] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const dummyBuses = [
-    { id: 1, name: 'Bus A', price: 10, departure: '9:00 AM', arrival: '12:00 PM', availableSeats: 20 },
-    { id: 2, name: 'Bus B', price: 15, departure: '10:00 AM', arrival: '1:00 PM', availableSeats: 15 },
-  ];
+  const handleFindBuses = async () => {
+    if (!startPoint || !endPoint) {
+      Alert.alert('Error', 'Please select both start and end points');
+      return;
+    }
 
-  const handleFindBuses = () => {
-    if (startPoint && endPoint) {
-      navigation.navigate('AvailableBuses',{buses: dummyBuses})
-    } else {
-      alert('Please select both start and end points');
+    try {
+      const response = await fetch('http://192.168.235.158:8080/buses/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          startPoint,
+          endPoint,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP status ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result.status === 'success' && Array.isArray(result.data)) {
+        console.log(result.data);
+        navigation.navigate('AvailableBuses', { buses: result.data });
+      } else {
+        Alert.alert('No Buses Found', 'No buses available for the selected route.');
+      }
+    } catch (error) {
+      Alert.alert('Error', `Failed to fetch buses: ${error.message}`);
     }
   };
 

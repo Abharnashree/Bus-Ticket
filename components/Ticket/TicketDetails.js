@@ -1,25 +1,28 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-import { useNavigation } from '@react-navigation/native'; // Use navigation for screen transitions
+import { useNavigation } from '@react-navigation/native';
 
 const TicketDetails = ({ route }) => {
-  const { busDetails, routeSummary, price } = route.params;
+  const { bookingDetails } = route.params; // Get booking details from params
+  const { busId, departure, arrival, tickets, totalPrice } = bookingDetails || {};
+
   const navigation = useNavigation();
 
   const handleNearestStop = () => {
-    navigation.navigate('NearestStop'); // No extra params needed
+    navigation.navigate('NearestStop'); // Navigate to the nearest stop screen
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Ticket Details</Text>
-      <Text>Bus: {busDetails.name || 'No bus selected'}</Text>
-      <Text>Route: {routeSummary}</Text>
-      <Text>Price: ₹{price}</Text>
-      <QRCode value={`Ticket: ${busDetails.name} - ${routeSummary}`} size={150} />
+      <Text>Bus ID: {busId || 'Unknown'}</Text>
+      <Text>Departure: {departure || 'N/A'}</Text>
+      <Text>Arrival: {arrival || 'N/A'}</Text>
+      <Text>Tickets: {tickets || 'N/A'}</Text>
+      <Text>Total Price: ₹{totalPrice || '0.00'}</Text>
+      <QRCode value={`Ticket: ${busId} - ₹${totalPrice}`} size={150} />
 
-      {/* Nearest Stop Button */}
       <View style={styles.buttonContainer}>
         <Button title="Nearest Stop" onPress={handleNearestStop} />
       </View>

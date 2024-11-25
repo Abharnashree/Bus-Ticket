@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { TextInput, Button, Title, Text } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -13,67 +14,61 @@ const Login = ({ navigation }) => {
     } else {
       setError(''); // Clear any previous error
       try {
-        const response = await fetch('http://192.168.1.3:8080/auth/login', {
+        const response = await fetch('http://192.168.235.158:8080/auth/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            email: email,
-            password: password,
+            email,
+            password,
           }),
         });
-  
+
         const result = await response.json();
-  
+
         if (response.ok) {
-          // Successfully logged in, navigate to the Home page
-          console.log(result.message); // For debugging
-          navigation.navigate('Home'); // Replace with the appropriate route after login
+          // Store userId in AsyncStorage
+          await AsyncStorage.setItem('userId', result.userId.toString());
+
+          // Navigate to the Home page
+          navigation.navigate('Home');
         } else {
-          // Invalid email or password
           setError(result.message || 'Invalid email or password');
         }
       } catch (error) {
-        // Handle network or server errors
         console.error('Login error:', error);
         setError('An error occurred. Please try again later.');
       }
     }
   };
-  
 
   return (
     <View style={styles.container}>
       <Title style={styles.title}>Login</Title>
 
-      {/* Email Input */}
       <TextInput
         label="Email"
         value={email}
-        onChangeText={(text) => setEmail(text)}
+        onChangeText={setEmail}
         keyboardType="email-address"
         style={styles.input}
       />
 
-      {/* Password Input */}
       <TextInput
         label="Password"
         value={password}
-        onChangeText={(text) => setPassword(text)}
+        onChangeText={setPassword}
         secureTextEntry
         style={styles.input}
       />
 
-      {/* Error Message */}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      {/* Login Button */}
       <Button mode="contained" onPress={handleLogin} style={styles.button}>
         Log In
       </Button>
 
-      {/* Navigate to Sign Up */}
       <Button
         mode="text"
         onPress={() => navigation.navigate('Signup')}

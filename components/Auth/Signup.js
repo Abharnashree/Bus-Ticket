@@ -23,7 +23,7 @@ const Signup = ({ navigation }) => {
         password,
       };
 
-      fetch('http://192.168.1.3:8080/auth/signIn', {
+      fetch('http://192.168.235.158:8080/auth/signIn', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

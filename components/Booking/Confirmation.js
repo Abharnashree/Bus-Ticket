@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Button, StyleSheet, Alert, Linking } from 'react-native';
 
 const Confirmation = ({ route, navigation }) => {
-  const { busDetails = {}, price = 0, tickets = 1 } = route.params || {};
-  const totalPrice = price * tickets;
+  const { bookingDetails = {} } = route.params || {};
+  const { busId = 'No bus selected', totalPrice = 0, tickets = 1, departure, arrival } = bookingDetails;
 
   // State to enable/disable "My Ticket" button
   const [isPaymentDone, setIsPaymentDone] = useState(false);
@@ -42,15 +42,16 @@ const Confirmation = ({ route, navigation }) => {
   }, [navigation]);
 
   const navigateToTicketDetails = () => {
-    navigation.navigate('TicketDetails', { busDetails, tickets, totalPrice });
+    navigation.navigate('TicketDetails', { bookingDetails });
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Booking Confirmation</Text>
       <View style={styles.summary}>
-        <Text>Bus: {busDetails.name || 'No bus selected'}</Text>
-        <Text>Price per Ticket: ₹{price}</Text>
+        <Text>Bus: {busId}</Text>
+        <Text>Departure: {departure || 'N/A'}</Text>
+        <Text>Arrival: {arrival || 'N/A'}</Text>
         <Text>Tickets: {tickets}</Text>
         <Text>Total Price: ₹{totalPrice}</Text>
       </View>
