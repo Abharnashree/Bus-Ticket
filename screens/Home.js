@@ -3,14 +3,19 @@ import { View, StyleSheet } from 'react-native';
 import { Button, TextInput, Title } from 'react-native-paper';
 import Notification from '../components/Notifications/Notification.js'; // Import Notification component
 
-const Home = () => {
+const Home = ({navigation}) => {
   const [startPoint, setStartPoint] = useState('');
   const [endPoint, setEndPoint] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
 
+  const dummyBuses = [
+    { id: 1, name: 'Bus A', price: 10, departure: '9:00 AM', arrival: '12:00 PM', availableSeats: 20 },
+    { id: 2, name: 'Bus B', price: 15, departure: '10:00 AM', arrival: '1:00 PM', availableSeats: 15 },
+  ];
+
   const handleFindBuses = () => {
     if (startPoint && endPoint) {
-      alert(`Finding buses from ${startPoint} to ${endPoint}`);
+      navigation.navigate('AvailableBuses',{buses: dummyBuses})
     } else {
       alert('Please select both start and end points');
     }
