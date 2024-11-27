@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Title } from 'react-native-paper';
+import { Text, Card, Title } from 'react-native-paper';
 
 const Notification = () => {
   // Mock notification data
@@ -12,12 +12,13 @@ const Notification = () => {
 
   return (
     <View style={styles.container}>
-      <Title style={styles.title}>Notifications</Title>
       <ScrollView>
         {notifications.map((notification) => (
-          <Text key={notification.id} style={styles.notification}>
-            {notification.message}
-          </Text>
+          <Card key={notification.id} style={styles.card}>
+            <Card.Content>
+              <Text style={styles.notificationMessage}>{notification.message}</Text>
+            </Card.Content>
+          </Card>
         ))}
       </ScrollView>
     </View>
@@ -28,16 +29,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#f0f0f0',
   },
-  title: {
-    fontSize: 24,
+  card: {
+    marginBottom: 15,
+    elevation: 3, // Adds shadow effect for iOS/Android
+    borderRadius: 8, // Rounds the corners of the card
+    backgroundColor: '#fff', // Sets a white background for each card
+  },
+  cardTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: '#333', // Dark color for title
   },
-  notification: {
+  notificationMessage: {
     fontSize: 16,
-    marginBottom: 10,
+    color: '#555', // Slightly lighter color for the message text
+    marginTop: 5,
   },
 });
 

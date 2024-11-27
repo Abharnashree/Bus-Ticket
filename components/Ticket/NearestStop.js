@@ -2,17 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import MapView, { Marker, Polyline } from 'react-native-maps';
+import axios from 'axios';
 
 const NearestStop = () => {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [directions, setDirections] = useState(null); // Store directions
 
-  // Hardcoded nearby stops
+  // Hardcoded nearby stops with actual bus stop names around Guindy, Chennai
   const nearbyStops = [
-    { name: 'Stop A', latitude: 12.971598, longitude: 77.594566 },
-    { name: 'Stop B', latitude: 12.97523, longitude: 77.603288 },
-    { name: 'Stop C', latitude: 12.96631, longitude: 77.595125 },
+    { name: 'Guindy Bus Stand', latitude: 13.007872, longitude: 80.220032 },
+    { name: 'Velachery Bus Stand', latitude: 12.978571, longitude: 80.220470 },
+    { name: 'Ekkatuthangal Bus Stop', latitude: 12.996283, longitude: 80.214618 },
+    { name: 'Ashok Pillar Bus Stop', latitude: 13.002283, longitude: 80.215397 },
+    { name: 'Kotturpuram Bus Stop', latitude: 13.002455, longitude: 80.237697 },
   ];
 
   // Calculate the nearest stop
@@ -35,6 +39,62 @@ const NearestStop = () => {
     });
 
     return nearestStop;
+  };
+
+  // Fetch directions from OSRM API
+  const fetchDirections = async (origin, destination) => {
+    const url = `https://router.project-osrm.org/route/v1/driving/${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=polyline`;
+
+    try {
+      const response = await axios.get(url);
+      const route = response.data.routes[0];
+      const polyline = decodePolyline(route.geometry);
+      setDirections(polyline);
+    } catch (error) {
+      console.error(error);
+      setErrorMsg('Unable to fetch directions.');
+    }
+  };
+
+  // Decode the polyline from the OSRM API
+  const decodePolyline = (encoded) => {
+    let polyline = [];
+    let index = 0;
+    let lat = 0;
+    let lng = 0;
+
+    while (index < encoded.length) {
+      let shift = 0;
+      let result = 0;
+      let byte;
+
+      do {
+        byte = encoded.charCodeAt(index++) - 63;
+        result |= (byte & 0x1f) << shift;
+        shift += 5;
+      } while (byte >= 0x20);
+
+      let deltaLat = result & 0x01 ? ~(result >> 1) : result >> 1;
+      lat += deltaLat;
+
+      shift = 0;
+      result = 0;
+      do {
+        byte = encoded.charCodeAt(index++) - 63;
+        result |= (byte & 0x1f) << shift;
+        shift += 5;
+      } while (byte >= 0x20);
+
+      let deltaLng = result & 0x01 ? ~(result >> 1) : result >> 1;
+      lng += deltaLng;
+
+      polyline.push({
+        latitude: (lat / 1E5),
+        longitude: (lng / 1E5)
+      });
+    }
+
+    return polyline;
   };
 
   useEffect(() => {
@@ -63,6 +123,15 @@ const NearestStop = () => {
     })();
   }, []);
 
+  useEffect(() => {
+    if (currentLocation) {
+      const nearestStop = getNearestStop();
+      if (nearestStop) {
+        fetchDirections(currentLocation, nearestStop);
+      }
+    }
+  }, [currentLocation]);
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -89,7 +158,7 @@ const NearestStop = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Nearest Stop</Text>
+      <Text style={styles.header}>Nearest Bus Stop</Text>
       <MapView
         style={styles.map}
         initialRegion={{
@@ -106,7 +175,7 @@ const NearestStop = () => {
           pinColor="blue"
         />
 
-        {/* Marker for nearest stop */}
+        {/* Marker for nearest bus stop */}
         <Marker
           coordinate={{ latitude: nearestStop.latitude, longitude: nearestStop.longitude }}
           title={nearestStop.name}
@@ -114,14 +183,13 @@ const NearestStop = () => {
         />
 
         {/* Route from current location to nearest stop */}
-        <Polyline
-          coordinates={[
-            currentLocation,
-            { latitude: nearestStop.latitude, longitude: nearestStop.longitude },
-          ]}
-          strokeColor="blue"
-          strokeWidth={4}
-        />
+        {directions && (
+          <Polyline
+            coordinates={directions}
+            strokeColor="blue"
+            strokeWidth={4}
+          />
+        )}
       </MapView>
     </View>
   );
